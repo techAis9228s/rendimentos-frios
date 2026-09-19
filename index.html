@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>RENDIMENTOS DE FRIOS - APARAS • v13</title>
+<title>RENDIMENTOS DE FRIOS - APARAS • v14</title>
 <style>
 :root{
   color-scheme:light;
@@ -286,14 +286,15 @@ button,input{font:inherit}
   display:grid;
   grid-template-columns:repeat(4,1fr);
   column-gap:12px;
-  row-gap:11px;
+  row-gap:12px;
   margin-top:0;
-  padding-bottom:8px;
+  padding:2px 4px 8px;
 }
 .key{
-  min-height:80px;
+  min-height:76px;
+  aspect-ratio:1/1;
   border:1px solid var(--num-border);
-  border-radius:20px;
+  border-radius:50%;
   color:#fff;
   font-size:1.85rem;
   font-weight:950;
@@ -311,6 +312,8 @@ button,input{font:inherit}
   filter:brightness(1.12);
 }
 .key.fn{
+  aspect-ratio:1/1;
+  border-radius:50%;
   background:linear-gradient(145deg,var(--fn-1),var(--fn-2));
   border-color:var(--fn-1);
   box-shadow:0 6px 0 var(--fn-shadow),0 8px 14px rgba(0,0,0,.12);
@@ -320,6 +323,8 @@ button,input{font:inherit}
 }
 .key.fn:active,.key.fn.pressed{box-shadow:0 1px 0 var(--fn-shadow),0 2px 5px rgba(0,0,0,.12)}
 .key.del{
+  aspect-ratio:1/1;
+  border-radius:50%;
   background:linear-gradient(145deg,var(--del-1),var(--del-2));
   border-color:var(--del-1);
   box-shadow:0 6px 0 var(--del-shadow),0 8px 14px rgba(0,0,0,.12);
@@ -329,18 +334,22 @@ button,input{font:inherit}
 }
 .key.del:active,.key.del.pressed{box-shadow:0 1px 0 var(--del-shadow),0 2px 5px rgba(0,0,0,.12)}
 .key[data-k=","]{
+  aspect-ratio:1/1;
+  border-radius:50%;
   background:linear-gradient(145deg,var(--comma-1),var(--comma-2));
   border-color:var(--comma-1);
   box-shadow:0 6px 0 var(--comma-shadow),0 8px 14px rgba(0,0,0,.12);
 }
 .key[data-k=","]:active,.key[data-k=","].pressed{box-shadow:0 1px 0 var(--comma-shadow),0 2px 5px rgba(0,0,0,.12)}
 .key.zero{
-  grid-column:span 4;
+  grid-column:2 / span 2;
   justify-content:center;
   padding-left:0;
+  aspect-ratio:auto;
   min-height:72px;
-  margin-top:-3px;
-  margin-bottom:5px;
+  border-radius:999px;
+  margin-top:0;
+  margin-bottom:2px;
   box-shadow:0 5px 0 var(--num-shadow),0 7px 12px rgba(0,0,0,.12);
 }
 .key.ok{
@@ -376,8 +385,8 @@ button,input{font:inherit}
   .result{border-radius:18px;min-height:72px}
   .r-value{font-size:1.35rem}
   .typed-card{border-radius:18px;padding:9px 10px}
-  .keypad{column-gap:9px;row-gap:10px;padding-bottom:7px}
-  .key{min-height:72px;border-radius:18px}
+  .keypad{column-gap:9px;row-gap:10px;padding:2px 2px 7px}
+  .key{min-height:68px;border-radius:50%}
 }
 @media (max-height:680px){
   .app{gap:5px;padding-top:5px;padding-bottom:6px}
@@ -391,7 +400,7 @@ button,input{font:inherit}
   .typed{font-size:clamp(2rem,10vw,2.8rem)}
   .keypad{row-gap:8px}
   .key{min-height:64px}
-  .key.zero{min-height:60px;margin-top:-2px}
+  .key.zero{min-height:60px;margin-top:0;border-radius:999px}
 }
 
 body.mobile-html-keypad #prodSearch{
@@ -405,6 +414,25 @@ body.mobile-html-keypad .search-wrap{
 }
 body.mobile-html-keypad #prodSearch:focus{
   box-shadow:none;
+}
+
+.search-wrap.search-active .search-field{
+  transform:translateY(-1px);
+}
+.search-wrap.search-active #prodSearch{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px var(--accent-soft),0 6px 16px rgba(0,0,0,.10);
+  background:color-mix(in srgb,var(--input) 82%,var(--accent) 18%);
+}
+.search-wrap.search-active .search-icon{
+  color:var(--accent);
+  transform:translateY(-50%) scale(1.08);
+}
+.search-wrap.search-active .search-ok{
+  filter:brightness(1.08);
+}
+.search-field,#prodSearch,.search-icon{
+  transition:border-color .15s ease,box-shadow .15s ease,background .15s ease,transform .12s ease,color .12s ease;
 }
 
 </style>
@@ -424,7 +452,7 @@ body.mobile-html-keypad #prodSearch:focus{
     <div class="search-wrap">
       <div class="search-row">
         <div class="search-field">
-          <input type="text" id="prodSearch" placeholder="Digite parte do PLU, ex.: 415" autocomplete="off" autocorrect="off" spellcheck="false" inputmode="none" enterkeyhint="done" readonly tabindex="-1">
+          <input type="text" id="prodSearch" placeholder="Pesquisar por PLU ou nome" autocomplete="off" autocorrect="off" spellcheck="false" inputmode="none" enterkeyhint="done" readonly tabindex="-1">
           <span class="search-icon">🔍</span>
           <button class="clear-btn" id="clearBtn" aria-label="Limpar">✕</button>
           <div class="suggestions" id="suggestions"></div>
@@ -683,6 +711,9 @@ function selectFromSearch(){
 
 function setSearchMode(on=true){
   searchMode=!!on;
+  const wrap=document.querySelector('.search-wrap');
+  if(wrap) wrap.classList.toggle('search-active',searchMode);
+
   if(searchMode){
     if(curP){
       $('prodSearch').value='';
@@ -861,11 +892,18 @@ $('prodSearch').addEventListener('keydown',e=>{
 
 // CELULAR: o toque é capturado pelo container. O input nunca recebe foco,
 // portanto Android/iPhone não conseguem abrir o teclado nativo.
+function pulseSearch(){
+  const wrap=document.querySelector('.search-wrap');
+  if(!wrap) return;
+  wrap.classList.add('search-active');
+}
+
 function activateHtmlProductKeypad(e){
   if(!IS_MOBILE) return;
   if(e && (e.target.closest('.clear-btn') || e.target.closest('.suggestions') || e.target.closest('.search-ok'))) return;
   if(e && e.cancelable) e.preventDefault();
   $('prodSearch').blur();
+  pulseSearch();
   setSearchMode(true);
 }
 const searchWrap=document.querySelector('.search-wrap');
@@ -921,13 +959,15 @@ document.addEventListener('keydown',e=>{
 });
 (function init(){
   try{applyTheme(localStorage.getItem(STORE_THEME)||'dark');}catch(e){applyTheme('dark');}
-  try{
-    const saved=JSON.parse(localStorage.getItem(STORE_LAST)||'null');
-    if(saved){
-      const prod=P.find(x=>x.b===saved.b&&x.r===saved.r&&x.n===saved.n);
-      if(prod) selectProduct(prod);
-    }
-  }catch(e){}
+  // Sempre inicia limpo: nenhum produto fica pré-selecionado.
+  try{localStorage.removeItem(STORE_LAST);}catch(e){}
+  curP=null;
+  buf='';
+  $('prodSearch').value='';
+  $('clearBtn').classList.remove('on');
+  updateProductPanel(null);
+  $('cPerda').textContent='—';
+  $('cPct').textContent='—';
   if(IS_MOBILE){
     document.body.classList.add('mobile-html-keypad');
     $('prodSearch').readOnly=true;
@@ -941,6 +981,7 @@ document.addEventListener('keydown',e=>{
     $('prodSearch').setAttribute('inputmode','text');
   }
   refresh();
+  setSearchMode(false);
 })();
 </script>
 </body>
