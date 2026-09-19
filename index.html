@@ -3,52 +3,70 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>RENDIMENTOS DE FRIOS - APARAS</title>
+<title>RENDIMENTOS DE FRIOS - APARAS • v9</title>
 <style>
 :root{
   color-scheme:light;
-  --bg:#f1f5f9;
-  --panel:#ffffff;
-  --panel-2:#f7fafc;
-  --input:#ffffff;
-  --text:#172033;
-  --muted:#758399;
-  --line:#d9e2ec;
-  --accent:#168b80;
-  --accent-strong:#0d7169;
-  --accent-soft:rgba(22,139,128,.10);
-  --good:#1687d9;
-  --good-soft:rgba(22,135,217,.10);
-  --bad:#e04452;
-  --bad-soft:rgba(224,68,82,.10);
-  --key:#ffffff;
-  --key-alt:#edf3f7;
-  --key-danger:#fff1f3;
+  --bg:#eaf1f8;
+  --panel:#f7fbff;
+  --panel-2:#edf5fb;
+  --input:#f1f7fc;
+  --text:#132033;
+  --muted:#65758b;
+  --line:#cbd9e7;
+  --accent:#008e83;
+  --accent-strong:#006f67;
+  --accent-soft:rgba(0,142,131,.13);
+  --good:#0078ff;
+  --good-soft:#ddecff;
+  --bad:#f02f4b;
+  --bad-soft:#ffe0e6;
+  --header-card:#f4f9fe;
+  --loss-card:#e4f3ff;
+  --loss-line:#9ccff3;
+  --tol-card:#e2f8f1;
+  --tol-line:#91d9c4;
+  --typed-card:#fff3d7;
+  --typed-line:#edcf85;
+  --key:#f0f6fb;
+  --key-line:#c5d7e6;
+  --key-alt:#e2f0ff;
+  --key-danger:#ffe3e8;
 }
 body[data-theme="dark"]{
   color-scheme:dark;
-  --bg:#0a1020;
-  --panel:#111a2b;
-  --panel-2:#172338;
-  --input:#0f192a;
-  --text:#f3f7ff;
-  --muted:#8fa0b7;
-  --line:#27364d;
-  --accent:#2ac3b4;
-  --accent-strong:#1aa293;
-  --accent-soft:rgba(42,195,180,.12);
-  --good:#39a8ff;
-  --good-soft:rgba(57,168,255,.12);
-  --bad:#ff5f6d;
-  --bad-soft:rgba(255,95,109,.12);
-  --key:#172338;
-  --key-alt:#1d2b43;
-  --key-danger:#35212d;
+  --bg:#08111f;
+  --panel:#101b2c;
+  --panel-2:#16243a;
+  --input:#122035;
+  --text:#f4f8ff;
+  --muted:#91a2b9;
+  --line:#2a3a52;
+  --accent:#22d3bd;
+  --accent-strong:#0fae99;
+  --accent-soft:rgba(34,211,189,.15);
+  --good:#39aaff;
+  --good-soft:#102d4a;
+  --bad:#ff5368;
+  --bad-soft:#3a1d2a;
+  --header-card:#101b2c;
+  --loss-card:#10283c;
+  --loss-line:#22577b;
+  --tol-card:#12322d;
+  --tol-line:#246e60;
+  --typed-card:#28243b;
+  --typed-line:#514b73;
+  --key:#15243a;
+  --key-line:#2a405d;
+  --key-alt:#193353;
+  --key-danger:#3c202c;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{min-height:100%;background:var(--bg)}
 body{
   font-family:'Segoe UI',Roboto,Arial,sans-serif;
+  overscroll-behavior:none;
+  -webkit-text-size-adjust:100%;
   color:var(--text);
   user-select:none;
   transition:background .2s ease,color .2s ease;
@@ -66,7 +84,8 @@ button,input{font:inherit}
 
 /* CABEÇALHO */
 .header{
-  background:var(--panel);
+  contain:layout paint;
+  background:var(--header-card);
   border:1px solid var(--line);
   border-radius:20px;
   padding:12px;
@@ -150,12 +169,13 @@ button,input{font:inherit}
 .product-plu b{color:var(--accent)}
 .metrics{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}
 .metric{
-  background:var(--panel-2);
   border:1px solid var(--line);
   border-radius:13px;
   padding:8px 9px;
   text-align:center;
 }
+.metric:first-child{background:var(--loss-card);border-color:var(--loss-line)}
+.metric:nth-child(2){background:var(--tol-card);border-color:var(--tol-line)}
 .metric span{display:block;font-size:.56rem;letter-spacing:.9px;text-transform:uppercase;color:var(--muted);font-weight:850}
 .metric b{display:block;margin-top:3px;font-size:.95rem;color:var(--accent);font-weight:900;font-variant-numeric:tabular-nums}
 
@@ -169,18 +189,20 @@ button,input{font:inherit}
   min-height:78px;
   display:flex;flex-direction:column;justify-content:center;
 }
- .result.blue{background:linear-gradient(180deg,var(--good-soft),transparent 180%);border-color:var(--good)}
-.result.red{background:linear-gradient(180deg,var(--bad-soft),transparent 180%);border-color:var(--bad)}
+.result.blue{background:var(--good-soft);border-color:var(--good);border-width:2px}
+.result.red{background:var(--bad-soft);border-color:var(--bad);border-width:2px}
 .r-label{font-size:.66rem;font-weight:900;letter-spacing:1.8px;text-transform:uppercase;color:var(--muted)}
 .r-value{font-size:1.5rem;font-weight:900;line-height:1.05;margin-top:5px;color:var(--text);font-variant-numeric:tabular-nums}
 .result.blue .r-label,.result.blue .r-value{color:var(--good)}
 .result.red .r-label,.result.red .r-value{color:var(--bad)}
+.result.blue .r-sub{color:var(--good)}
+.result.red .r-sub{color:var(--bad)}
 .r-sub{font-size:.64rem;color:var(--muted);font-weight:800;margin-top:4px;text-transform:uppercase;letter-spacing:.8px}
 
 /* VALOR DIGITADO */
 .typed-card{
-  border:1px solid var(--line);
-  background:var(--panel);
+  border:1px solid var(--typed-line);
+  background:var(--typed-card);
   border-radius:20px;
   padding:10px 12px;
 }
@@ -190,6 +212,7 @@ button,input{font:inherit}
 
 /* TECLADO */
 .keypad{
+  contain:layout paint;
   display:grid;
   grid-template-columns:repeat(4,1fr);
   gap:7px;
@@ -197,7 +220,7 @@ button,input{font:inherit}
 }
 .key{
   min-height:64px;
-  border:1px solid var(--line);
+  border:1px solid var(--key-line);
   border-radius:18px;
   background:var(--key);
   color:var(--text);
