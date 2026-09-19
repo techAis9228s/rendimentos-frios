@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>RENDIMENTOS DE FRIOS - APARAS • v17</title>
+<title>RENDIMENTOS DE FRIOS - APARAS • v18</title>
 <meta name="theme-color" content="#08111f">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -45,6 +45,9 @@
   --fn-1:#ffb703;
   --fn-2:#ff8a00;
   --fn-shadow:#b95b00;
+  --zero-1:#00c9d8;
+  --zero-2:#0097b8;
+  --zero-shadow:#006b83;
   --comma-1:#a855f7;
   --comma-2:#7c3aed;
   --comma-shadow:#5620a7;
@@ -91,6 +94,9 @@ body[data-theme="dark"]{
   --fn-1:#ffb703;
   --fn-2:#ff8a00;
   --fn-shadow:#754000;
+  --zero-1:#18d9e5;
+  --zero-2:#009ebd;
+  --zero-shadow:#045c70;
   --comma-1:#b35cff;
   --comma-2:#8338ec;
   --comma-shadow:#41146f;
@@ -217,7 +223,8 @@ button,input{font:inherit}
 .suggestions{
   position:absolute;left:0;right:0;top:calc(100% + 7px);
   background:var(--panel);
-  border:1px solid var(--line);  border-radius:15px;
+  border:1px solid var(--line);
+  border-radius:15px;
   max-height:46vh;
   overflow:auto;
   z-index:9999;
@@ -424,6 +431,16 @@ button,input{font:inherit}
   font-weight:950
 }
 .key.del:active,.key.del.pressed{box-shadow:0 1px 0 var(--del-shadow),0 2px 5px rgba(0,0,0,.12)}
+
+.key.zero-special{
+  background:linear-gradient(145deg,var(--zero-1),var(--zero-2));
+  border-color:var(--zero-1);
+  box-shadow:0 6px 0 var(--zero-shadow),0 8px 14px rgba(0,0,0,.12);
+  color:#fff;
+}
+.key.zero-special:active,.key.zero-special.pressed{
+  box-shadow:0 1px 0 var(--zero-shadow),0 2px 5px rgba(0,0,0,.12);
+}
 .key[data-k=","]{
   aspect-ratio:1/1;
   border-radius:50%;
@@ -462,7 +479,8 @@ button,input{font:inherit}
   .theme-toggle{padding:7px 8px;font-size:.66rem}
   #prodSearch{height:44px}
   .metrics{gap:6px}
-  .metric{padding:7px 6px}  .metric b{font-size:.9rem}
+  .metric{padding:7px 6px}
+  .metric b{font-size:.9rem}
   .result{border-radius:18px;min-height:72px}
   .r-value{font-size:1.35rem}
   .typed-card{border-radius:18px;padding:9px 10px}
@@ -518,6 +536,20 @@ body.mobile-html-keypad #prodSearch:focus{
 }
 .search-field,#prodSearch,.search-icon{
   transition:border-color .15s ease,box-shadow .15s ease,background .15s ease,transform .12s ease,color .12s ease;
+}
+
+
+@media (max-width:350px){
+  .app{padding-left:6px;padding-right:6px}
+  .keypad{column-gap:7px;row-gap:8px}
+  .key{min-height:62px;font-size:1.55rem}
+  .typed-row{grid-template-columns:minmax(0,1fr) 64px;gap:6px}
+  .typed-delete{width:64px;min-height:64px}
+  .brand-title{font-size:.86rem}
+  .action-btn span{display:none}
+}
+@media (min-width:700px){
+  .app{max-width:560px;padding-top:16px}
 }
 
 </style>
@@ -588,19 +620,19 @@ body.mobile-html-keypad #prodSearch:focus{
     <button class="key" data-k="7">7</button>
     <button class="key" data-k="8">8</button>
     <button class="key" data-k="9">9</button>
-    <button class="key" data-k="0">0</button>
+    <button class="key fn" data-k="clr">C</button>
 
     <button class="key" data-k="4">4</button>
     <button class="key" data-k="5">5</button>
     <button class="key" data-k="6">6</button>
-    <button class="key fn" data-k="clr">C</button>
+    <button class="key zero-special" data-k="0">0</button>
 
     <button class="key" data-k="1">1</button>
     <button class="key" data-k="2">2</button>
     <button class="key" data-k="3">3</button>
     <button class="key" data-k=",">,</button>
 
-
+    
   </section>
 </div>
 
@@ -690,7 +722,8 @@ const DISPLAY_BASE={
   '92296':'QUEIJO COALHO C. GRANDE'
 };
 const DISPLAY_RELATED={
-  '50951':'QUEIJO COALHO C. GRANDE'};
+  '50951':'QUEIJO COALHO C. GRANDE'
+};
 function displayBaseName(x){ return DISPLAY_BASE[x.b] || x.n; }
 function displayRelatedName(x){ return DISPLAY_RELATED[x.r] || x.nr; }
 
@@ -909,7 +942,8 @@ function newOperation(){
   $('cPerda').textContent='—';
   $('cPct').textContent='—';
   clearSearchError();
-  $('newBtn').classList.remove('ready');  try{localStorage.removeItem(STORE_LAST);}catch(e){}
+  $('newBtn').classList.remove('ready');
+  try{localStorage.removeItem(STORE_LAST);}catch(e){}
   refresh();
   setSearchMode(true);
 }
@@ -963,8 +997,7 @@ function press(k){
       return;
     }
     if(k==='del'){
-      updateSearchFromKeypad(value.slice(0,-1));
-      return;
+      updateSearchFromKeypad(value.slice(0,-1));      return;
     }
     if(k===',') return;
     if(/^[0-9]$/.test(k) && value.length<6){
@@ -1028,3 +1061,131 @@ $('prodSearch').addEventListener('keydown',e=>{
 
 // CELULAR: o toque é capturado pelo container. O input nunca recebe foco,
 // portanto Android/iPhone não conseguem abrir o teclado nativo.
+
+function pulseSearch(){
+  const wrap=document.querySelector('.search-wrap');
+  if(!wrap) return;
+  wrap.classList.add('search-active');
+}
+
+function activateHtmlProductKeypad(e){
+  if(!IS_MOBILE) return;
+  if(e && (e.target.closest('.clear-btn') || e.target.closest('.suggestions') || e.target.closest('.search-ok'))) return;
+  if(e && e.cancelable) e.preventDefault();
+  $('prodSearch').blur();
+  pulseSearch();
+  setSearchMode(true);
+}
+const searchWrap=document.querySelector('.search-wrap');
+searchWrap.addEventListener('pointerdown',activateHtmlProductKeypad,{passive:false});
+searchWrap.addEventListener('touchstart',activateHtmlProductKeypad,{passive:false});
+searchWrap.addEventListener('click',activateHtmlProductKeypad);
+$('searchOk').addEventListener('pointerdown',()=>flashPressed($('searchOk')),{passive:true});
+$('searchOk').addEventListener('click',()=>{
+  flashPressed($('searchOk'));
+  if(selectFromSearch()) setSearchMode(false);
+});
+$('clearBtn').addEventListener('click',clearSearch);
+$('themeToggle').addEventListener('click',toggleTheme);
+$('newBtn').addEventListener('click',()=>{flashPressed($('newBtn'));newOperation();});
+$('newBtn').addEventListener('pointerdown',()=>flashPressed($('newBtn')),{passive:true});
+$('installBtn').addEventListener('click',async()=>{
+  if(!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  try{await deferredInstallPrompt.userChoice;}catch(e){}
+  deferredInstallPrompt=null;
+  $('installBtn').classList.remove('on');
+});
+$('suggestions').addEventListener('click',e=>{const el=e.target.closest('.sug');if(el) pickProduct(el);});
+document.addEventListener('click',e=>{
+  const box=$('suggestions');
+  if(!box.classList.contains('on')) return;
+  if(e.target.closest('.search-wrap')) return;
+  box.classList.remove('on');
+});
+function flashPressed(el){
+  if(!el) return;
+  el.classList.add('pressed');
+  clearTimeout(el._pressTimer);
+  el._pressTimer=setTimeout(()=>el.classList.remove('pressed'),130);
+}
+$('typedDelete').addEventListener('pointerdown',()=>flashPressed($('typedDelete')),{passive:true});
+$('typedDelete').addEventListener('click',()=>{
+  flashPressed($('typedDelete'));
+  press('del');
+});
+$('keypad').addEventListener('pointerdown',e=>{
+  const b=e.target.closest('.key');
+  if(b) flashPressed(b);
+},{passive:true});
+$('keypad').addEventListener('click',e=>{
+  const b=e.target.closest('.key');
+  if(b){flashPressed(b);press(b.dataset.k);}
+});
+document.addEventListener('keydown',e=>{
+  if(searchMode){
+    if(/^[0-9]$/.test(e.key)){e.preventDefault();press(e.key);}
+    else if(e.key==='Backspace'){e.preventDefault();press('del');}
+    else if(e.key==='Enter'){e.preventDefault();press('ok');}
+    else if(e.key==='Escape'){e.preventDefault();setSearchMode(false);}
+    return;
+  }
+  if(document.activeElement===$('prodSearch')){
+    if(e.key==='Escape'){$('suggestions').classList.remove('on');$('prodSearch').blur();}
+    return;
+  }
+  if(/^[0-9]$/.test(e.key)) press(e.key);
+  else if(e.key===','||e.key==='.') press(',');
+  else if(e.key==='Backspace'){e.preventDefault();press('del');}
+  else if(e.key.toLowerCase()==='c') press('clr');
+  else if(e.key==='Enter') press('ok');
+  else if(e.key==='Escape') press('clr');
+});
+
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  deferredInstallPrompt=e;
+  $('installBtn').classList.add('on');
+});
+window.addEventListener('appinstalled',()=>{
+  deferredInstallPrompt=null;
+  $('installBtn').classList.remove('on');
+});
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
+  });
+}
+// Evita zoom por duplo toque/gesto nos navegadores móveis.
+document.addEventListener('dblclick',e=>e.preventDefault(),{passive:false});
+document.addEventListener('gesturestart',e=>e.preventDefault(),{passive:false});
+
+(function init(){
+  try{applyTheme(localStorage.getItem(STORE_THEME)||'dark');}catch(e){applyTheme('dark');}
+  // Sempre inicia limpo: nenhum produto fica pré-selecionado.
+  try{localStorage.removeItem(STORE_LAST);}catch(e){}
+  curP=null;
+  buf='';
+  $('prodSearch').value='';
+  $('clearBtn').classList.remove('on');
+  updateProductPanel(null);
+  $('cPerda').textContent='—';
+  $('cPct').textContent='—';
+  if(IS_MOBILE){
+    document.body.classList.add('mobile-html-keypad');
+    $('prodSearch').readOnly=true;
+    $('prodSearch').tabIndex=-1;
+    $('prodSearch').setAttribute('inputmode','none');
+    $('prodSearch').setAttribute('aria-label','Campo de PLU controlado pelo teclado da página');
+  }else{
+    $('prodSearch').readOnly=false;
+    $('prodSearch').removeAttribute('readonly');
+    $('prodSearch').removeAttribute('tabindex');
+    $('prodSearch').setAttribute('inputmode','text');
+  }
+  refresh();
+  setSearchMode(false);
+})();
+</script>
+</body>
+</html>
