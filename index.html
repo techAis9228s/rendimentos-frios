@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>RENDIMENTOS DE FRIOS - APARAS • v10</title>
+<title>RENDIMENTOS DE FRIOS - APARAS • v11</title>
 <style>
 :root{
   color-scheme:light;
@@ -84,7 +84,6 @@ button,input{font:inherit}
 
 /* CABEÇALHO */
 .header{
-  contain:layout paint;
   background:var(--header-card);
   border:1px solid var(--line);
   border-radius:20px;
@@ -108,6 +107,20 @@ button,input{font:inherit}
 
 /* BUSCA */
 .search-wrap{position:relative}
+.search-row{display:grid;grid-template-columns:minmax(0,1fr) 58px;gap:8px;align-items:center}
+.search-field{position:relative;min-width:0}
+.search-ok{
+  height:46px;
+  border:0;
+  border-radius:14px;
+  background:var(--accent);
+  color:#fff;
+  font-weight:950;
+  letter-spacing:.5px;
+  cursor:pointer;
+  touch-action:manipulation;
+}
+.search-ok:active{background:var(--accent-strong);transform:scale(.97)}
 #prodSearch{
   width:100%;
   height:46px;
@@ -137,7 +150,7 @@ button,input{font:inherit}
   border-radius:15px;
   max-height:46vh;
   overflow:auto;
-  z-index:100;
+  z-index:9999;
   display:none;
 }
 .suggestions.on{display:block}
@@ -215,16 +228,16 @@ button,input{font:inherit}
   contain:layout paint;
   display:grid;
   grid-template-columns:repeat(4,1fr);
-  gap:8px;
+  gap:9px;
   margin-top:0;
 }
 .key{
-  min-height:72px;
+  min-height:80px;
   border:1px solid var(--key-line);
-  border-radius:19px;
+  border-radius:20px;
   background:var(--key);
   color:var(--text);
-  font-size:1.65rem;
+  font-size:1.85rem;
   font-weight:850;
   cursor:pointer;
   display:flex;align-items:center;justify-content:center;
@@ -234,8 +247,8 @@ button,input{font:inherit}
 .key:active{transform:scale(.97);background:var(--panel-2)}
 .key.fn{background:var(--key-alt);color:var(--accent);font-size:1.02rem;font-weight:900}
 .key.del{background:var(--key-danger);color:var(--bad);font-size:1.25rem;font-weight:900}
-.key.zero{grid-column:span 3;justify-content:flex-start;padding-left:24px}
-.key.ok{background:var(--accent);border-color:transparent;color:#fff;font-size:.98rem;font-weight:900;letter-spacing:.8px}
+.key.zero{grid-column:span 4;justify-content:center;padding-left:0}
+.key.ok{background:var(--accent);border-color:var(--accent);color:#fff;font-size:.98rem;font-weight:900;letter-spacing:.8px}
 .key.ok:active{background:var(--accent-strong)}
 
 @media (max-height:760px){
@@ -245,7 +258,7 @@ button,input{font:inherit}
   #prodSearch{height:42px}
   .result{padding:10px;min-height:68px}
   .typed-card{padding:8px 10px}
-  .key{min-height:64px}
+  .key{min-height:70px}
   .metrics{margin-top:6px}
 }
 
@@ -263,7 +276,7 @@ button,input{font:inherit}
   .r-value{font-size:1.35rem}
   .typed-card{border-radius:18px;padding:9px 10px}
   .keypad{gap:6px}
-  .key{min-height:66px;border-radius:17px}
+  .key{min-height:72px;border-radius:18px}
 }
 @media (max-height:680px){
   .app{gap:5px;padding-top:5px;padding-bottom:6px}
@@ -275,7 +288,7 @@ button,input{font:inherit}
   .result{padding:8px 10px;min-height:60px}
   .typed-card{padding:7px 10px}
   .typed{font-size:clamp(2rem,10vw,2.8rem)}
-  .key{min-height:58px}
+  .key{min-height:64px}
 }
 
 body.mobile-html-keypad #prodSearch{
@@ -306,10 +319,15 @@ body.mobile-html-keypad #prodSearch:focus{
     </div>
 
     <div class="search-wrap">
-      <input type="text" id="prodSearch" placeholder="Digite parte do PLU, ex.: 415" autocomplete="off" autocorrect="off" spellcheck="false" inputmode="none" enterkeyhint="done" readonly tabindex="-1">
-      <span class="search-icon">🔍</span>
-      <button class="clear-btn" id="clearBtn" aria-label="Limpar">✕</button>
-      <div class="suggestions" id="suggestions"></div>
+      <div class="search-row">
+        <div class="search-field">
+          <input type="text" id="prodSearch" placeholder="Digite parte do PLU, ex.: 415" autocomplete="off" autocorrect="off" spellcheck="false" inputmode="none" enterkeyhint="done" readonly tabindex="-1">
+          <span class="search-icon">🔍</span>
+          <button class="clear-btn" id="clearBtn" aria-label="Limpar">✕</button>
+          <div class="suggestions" id="suggestions"></div>
+        </div>
+        <button class="search-ok" id="searchOk" type="button" aria-label="Selecionar produto">OK</button>
+      </div>
     </div>
 
     <div class="product-panel" id="productPanel">
@@ -356,7 +374,6 @@ body.mobile-html-keypad #prodSearch:focus{
     <button class="key" data-k=",">,</button>
 
     <button class="key zero" data-k="0">0</button>
-    <button class="key ok" data-k="ok">OK</button>
   </section>
 </div>
 
@@ -517,8 +534,10 @@ function getSearchMatches(q){
 
   const qn=norm(term);
   const numeric=/^\d+$/.test(term);
+
   const list=P.filter(x=>matches(x,term));
 
+  // Ao digitar código parcial, mostra primeiro os PLUs que começam pelo número digitado.
   return list.sort((a,b)=>{
     if(numeric){
       const ap=(String(a.r).startsWith(term)?0:String(a.b).startsWith(term)?1:2);
@@ -562,22 +581,13 @@ function selectFromSearch(){
 function setSearchMode(on=true){
   searchMode=!!on;
   if(searchMode){
-    buf='';
     if(curP){
       $('prodSearch').value='';
       $('clearBtn').classList.remove('on');
     }
-    $('cTyped').textContent=$('prodSearch').value || '0';
-    const title=document.querySelector('.typed-title');
-    const unit=document.querySelector('.typed-unit');
-    if(title) title.textContent='Código do produto';
-    if(unit) unit.textContent='PLU • OK seleciona a opção destacada';
+    // O código aparece somente no campo de busca. O visor continua reservado ao peso.
     renderSuggestions();
   }else{
-    const title=document.querySelector('.typed-title');
-    const unit=document.querySelector('.typed-unit');
-    if(title) title.textContent='Valor digitado';
-    if(unit) unit.textContent='kg';
     refresh();
   }
 }
@@ -585,8 +595,8 @@ function setSearchMode(on=true){
 function updateSearchFromKeypad(value){
   $('prodSearch').value=value;
   $('clearBtn').classList.toggle('on',!!value);
-  $('cTyped').textContent=value || '0';
   activeSuggestionIndex=0;
+  // Exibe a lista imediatamente a cada número digitado.
   renderSuggestions();
 }
 
@@ -750,7 +760,7 @@ $('prodSearch').addEventListener('keydown',e=>{
 // portanto Android/iPhone não conseguem abrir o teclado nativo.
 function activateHtmlProductKeypad(e){
   if(!IS_MOBILE) return;
-  if(e && (e.target.closest('.clear-btn') || e.target.closest('.suggestions'))) return;
+  if(e && (e.target.closest('.clear-btn') || e.target.closest('.suggestions') || e.target.closest('.search-ok'))) return;
   if(e && e.cancelable) e.preventDefault();
   $('prodSearch').blur();
   setSearchMode(true);
@@ -759,6 +769,7 @@ const searchWrap=document.querySelector('.search-wrap');
 searchWrap.addEventListener('pointerdown',activateHtmlProductKeypad,{passive:false});
 searchWrap.addEventListener('touchstart',activateHtmlProductKeypad,{passive:false});
 searchWrap.addEventListener('click',activateHtmlProductKeypad);
+$('searchOk').addEventListener('click',()=>{ if(selectFromSearch()) setSearchMode(false); });
 $('clearBtn').addEventListener('click',clearSearch);
 $('themeToggle').addEventListener('click',toggleTheme);
 $('suggestions').addEventListener('click',e=>{const el=e.target.closest('.sug');if(el) pickProduct(el);});
