@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>RENDIMENTOS DE FRIOS - APARAS • v9</title>
+<title>RENDIMENTOS DE FRIOS - APARAS • v10</title>
 <style>
 :root{
   color-scheme:light;
@@ -215,16 +215,16 @@ button,input{font:inherit}
   contain:layout paint;
   display:grid;
   grid-template-columns:repeat(4,1fr);
-  gap:7px;
+  gap:8px;
   margin-top:0;
 }
 .key{
-  min-height:64px;
+  min-height:72px;
   border:1px solid var(--key-line);
-  border-radius:18px;
+  border-radius:19px;
   background:var(--key);
   color:var(--text);
-  font-size:1.5rem;
+  font-size:1.65rem;
   font-weight:850;
   cursor:pointer;
   display:flex;align-items:center;justify-content:center;
@@ -245,7 +245,7 @@ button,input{font:inherit}
   #prodSearch{height:42px}
   .result{padding:10px;min-height:68px}
   .typed-card{padding:8px 10px}
-  .key{min-height:58px}
+  .key{min-height:64px}
   .metrics{margin-top:6px}
 }
 
@@ -263,7 +263,7 @@ button,input{font:inherit}
   .r-value{font-size:1.35rem}
   .typed-card{border-radius:18px;padding:9px 10px}
   .keypad{gap:6px}
-  .key{min-height:60px;border-radius:16px}
+  .key{min-height:66px;border-radius:17px}
 }
 @media (max-height:680px){
   .app{gap:5px;padding-top:5px;padding-bottom:6px}
@@ -275,7 +275,7 @@ button,input{font:inherit}
   .result{padding:8px 10px;min-height:60px}
   .typed-card{padding:7px 10px}
   .typed{font-size:clamp(2rem,10vw,2.8rem)}
-  .key{min-height:52px}
+  .key{min-height:58px}
 }
 
 body.mobile-html-keypad #prodSearch{
@@ -306,7 +306,7 @@ body.mobile-html-keypad #prodSearch:focus{
     </div>
 
     <div class="search-wrap">
-      <input type="text" id="prodSearch" placeholder="Toque aqui → digite o PLU no teclado da página" autocomplete="off" autocorrect="off" spellcheck="false" inputmode="none" enterkeyhint="done" readonly tabindex="-1">
+      <input type="text" id="prodSearch" placeholder="Digite parte do PLU, ex.: 415" autocomplete="off" autocorrect="off" spellcheck="false" inputmode="none" enterkeyhint="done" readonly tabindex="-1">
       <span class="search-icon">🔍</span>
       <button class="clear-btn" id="clearBtn" aria-label="Limpar">✕</button>
       <div class="suggestions" id="suggestions"></div>
@@ -451,7 +451,7 @@ const DISPLAY_RELATED={
 function displayBaseName(x){ return DISPLAY_BASE[x.b] || x.n; }
 function displayRelatedName(x){ return DISPLAY_RELATED[x.r] || x.nr; }
 
-let curP=null, buf='', searchMode=false;
+let curP=null, buf='', searchMode=false, activeSuggestionIndex=0;
 const IS_TOUCH=('ontouchstart' in window) || navigator.maxTouchPoints>0 || window.matchMedia('(pointer: coarse)').matches;
 const IS_MOBILE=/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (IS_TOUCH && window.innerWidth<=900);
 
@@ -478,31 +478,62 @@ function highlight(text,q){
 function renderSuggestions(){
   const q=$('prodSearch').value.trim();
   const box=$('suggestions');
-  if(!q){box.classList.remove('on');box.innerHTML='';return;}
-  const list=P.filter(x=>matches(x,q)).slice(0,30);
+
+  if(!q){
+    box.classList.remove('on');
+    box.innerHTML='';
+    activeSuggestionIndex=0;
+    return;
+  }
+
+  const list=getSearchMatches(q).slice(0,30);
+  activeSuggestionIndex=0;
+
   if(!list.length){
     box.innerHTML='<div class="sug-empty">Nenhum produto encontrado.</div>';
-    box.classList.add('on');return;
+    box.classList.add('on');
+    return;
   }
-  box.innerHTML=list.map(x=>{
-    const on=curP&&curP.n===x.n&&curP.b===x.b&&curP.r===x.r;
-    return `<div class="sug${on?' on':''}" data-n="${encodeURIComponent(x.n)}" data-b="${x.b}" data-r="${x.r}">
+
+  box.innerHTML=list.map((x,i)=>{
+    const selected=i===activeSuggestionIndex;
+    return `<div class="sug${selected?' on':''}" data-index="${i}" data-n="${encodeURIComponent(x.n)}" data-b="${x.b}" data-r="${x.r}">
       <div class="sug-name">${highlight(displayBaseName(x),q)}</div>
       <div class="sug-meta">
-        <span>Origem <b>${x.b}</b></span>
-        <span>Destino <b>${x.r}</b></span>
+        <span>PLU origem <b>${x.b}</b></span>
+        <span>PLU destino <b>${x.r}</b></span>
         <span>Perda <b>${x.p.toFixed(3).replace('.',',')} kg</b></span>
-        <span>Tol. <b>${x.pc}</b></span>
+        <span>Tolerância <b>${x.pc}</b></span>
       </div>
-      <div class="sug-dest">Destino: <b>${highlight(displayRelatedName(x),q)}</b></div>
+      <div class="sug-dest">Relacionado: <b>${highlight(displayRelatedName(x),q)}</b></div>
     </div>`;
   }).join('');
+
   box.classList.add('on');
 }
 function getSearchMatches(q){
   const term=(q||'').trim();
   if(!term) return [];
-  return P.filter(x=>matches(x,term));
+
+  const qn=norm(term);
+  const numeric=/^\d+$/.test(term);
+  const list=P.filter(x=>matches(x,term));
+
+  return list.sort((a,b)=>{
+    if(numeric){
+      const ap=(String(a.r).startsWith(term)?0:String(a.b).startsWith(term)?1:2);
+      const bp=(String(b.r).startsWith(term)?0:String(b.b).startsWith(term)?1:2);
+      if(ap!==bp) return ap-bp;
+    }
+
+    const an=norm(displayBaseName(a));
+    const bn=norm(displayBaseName(b));
+    const ae=an.startsWith(qn)?0:1;
+    const be=bn.startsWith(qn)?0:1;
+    if(ae!==be) return ae-be;
+
+    return displayBaseName(a).localeCompare(displayBaseName(b),'pt-BR');
+  });
 }
 function chooseBestMatch(q){
   const term=(q||'').trim();
@@ -511,13 +542,14 @@ function chooseBestMatch(q){
   const list=getSearchMatches(term);
   if(!list.length) return null;
 
-  // Prioridade: PLU destino exato → PLU origem exato → nome exato → primeiro resultado.
+  // Exato primeiro. Se for parcial, OK/Enter escolhe a primeira opção destacada.
   return list.find(x=>String(x.r)===term)
       || list.find(x=>String(x.b)===term)
       || list.find(x=>norm(x.n)===qn)
       || list.find(x=>norm(displayBaseName(x))===qn)
       || list.find(x=>norm(x.nr)===qn)
       || list.find(x=>norm(displayRelatedName(x))===qn)
+      || list[activeSuggestionIndex]
       || list[0];
 }
 function selectFromSearch(){
@@ -539,7 +571,7 @@ function setSearchMode(on=true){
     const title=document.querySelector('.typed-title');
     const unit=document.querySelector('.typed-unit');
     if(title) title.textContent='Código do produto';
-    if(unit) unit.textContent='PLU';
+    if(unit) unit.textContent='PLU • OK seleciona a opção destacada';
     renderSuggestions();
   }else{
     const title=document.querySelector('.typed-title');
@@ -554,6 +586,7 @@ function updateSearchFromKeypad(value){
   $('prodSearch').value=value;
   $('clearBtn').classList.toggle('on',!!value);
   $('cTyped').textContent=value || '0';
+  activeSuggestionIndex=0;
   renderSuggestions();
 }
 
